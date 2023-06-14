@@ -174,7 +174,7 @@ workflow {
     .map{ group_key, files -> tuple(
         "${files[0].parent.baseName}_$group_key", files
     )}
-    //.take(10)
+    .take(30)
 
   BASECALL(
     ab_files
@@ -218,14 +218,20 @@ workflow {
   .map{ [it[0], it[1]]}  
   .set{ merges_forward }
 
+
   TRIM_AND_MERGE_REVERSED_READS.out.merge_reads
   .join(second_merge_process.succeeded)
   .map{ [it[0], it[1]]}  
   .set{ merges_reverse }
+  
+  // Use forward reads of the samples that raise an error
+  TRIM_AND_MERGE.out.failed_to_merge.
+   filter{ !it[1].isEmpty() }
+   .set{merge_failures}
 
   merges = merges_forward.concat(merges_reverse)
   TRIM_ENDS(merges)
-  TRIM_ENDS.out.trimmedReads.concat(trimmed_single_reads)
+  TRIM_ENDS.out.trimmedReads.concat(trimmed_single_reads, merge_failures)
     .set{ all_fastqs }
   
   FASTQ_TO_FASTA(all_fastqs)

@@ -42,9 +42,18 @@ workflow TRIM_AND_MERGE {
     MULTIQC(fastp)
 
     MERGE_READS(trimmedReads)
+
+    MERGE_READS.out.merged_fastq
+  // Catch here the errors and return them as a single read
+    .join(trimmedReads, remainder: true)
+    .filter{ id, merged_reads, trim_reads_tp ->
+      merged_reads == null  
+    }.map{ [it[0], it[2][0]]}
+    .set{failed_to_merge}
   
   emit:
     merge_reads = MERGE_READS.out.merged_fastq
     merge_log = MERGE_READS.out.log  
     trimmed_reads = FASTP.out.trimmedReads
+    failed_to_merge
 }
