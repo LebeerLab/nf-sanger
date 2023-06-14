@@ -232,6 +232,9 @@ workflow {
   // Alignment trimmed reads
   ALIGN_READS(
    TRIM_AND_MERGE.out.trimmed_reads
+     .filter{ !it[1].isEmpty() }
+     .filter{ !it[1][0].isEmpty() }
+     .filter{ !it[1][1].isEmpty() }
   )
   BLAST_16S(
    FASTQ_TO_FASTA.out.fasta
