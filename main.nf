@@ -174,7 +174,7 @@ workflow {
     .map{ group_key, files -> tuple(
         "${files[0].parent.baseName}_$group_key", files
     )}
-    .take(30)
+    //.take(30)
 
   BASECALL(
     ab_files
