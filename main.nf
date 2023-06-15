@@ -174,7 +174,7 @@ workflow {
     .map{ group_key, files -> tuple(
         "${files[0].parent.baseName}_$group_key", files
     )}
-    //.take(30)
+    .take(30)
 
   BASECALL(
     ab_files
@@ -205,10 +205,13 @@ workflow {
       }.set{ second_merge_process }
 
       if (second_merge_process.failed) {
-      // Take the forward reads after trimming of the samples that failed
+      // Take the longest read after trimming of the samples that failed
        TRIM_AND_MERGE.out.trimmed_reads
        .join(second_merge_process.failed)
-       .map{ [ it[0] , it[1][0] ]}
+       // select here the longest read in the it[1] tuple
+       .map{ [it[0], 
+              (it[1][0].size() <=> it[1][1].size()) > 0 ? it[1][0] : it[1][1]]
+        }
        .set{ trimmed_single_reads }
       }
   }

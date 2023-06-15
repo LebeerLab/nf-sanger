@@ -48,7 +48,9 @@ workflow TRIM_AND_MERGE {
     .join(trimmedReads, remainder: true)
     .filter{ id, merged_reads, trim_reads_tp ->
       merged_reads == null  
-    }.map{ [it[0], it[2][0]]}
+    }.map{ [it[0], 
+           (it[2][0].size() <=> it[2][1].size()) > 0 ? it[2][0] : it[2][1]]
+    }
     .set{failed_to_merge}
   
   emit:
