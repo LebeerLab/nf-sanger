@@ -4,12 +4,19 @@ Nextflow pipeline for sanger data
 ## Usage
 Running the pipeline with a `--help` flag produces the following output:
 ```
+ N E X T F L O W  ~  version 22.10.3
+Launching `main.nf` [marvelous_brattain] DSL2 - revision: 1e5c93dbfe
+
  Name: nf-sanger-sequencing
  Author: LAMB (UAntwerp)
 =========================================
 Required arguments:
-  --sample_dir             Path to the samplesheet containing the reads to be assembled. Default: data
-  --outdir                 Column with the name of the sample. Default: results
+  --sample_dir          Path to the samplesheet containing the reads to be assembled. Default: data
+  --outdir              Column with the name of the sample. Default: results
+  --taxonomy            Path to the gtdb taxonomy file.
+                            Default: /mnt/b/seqdata/sanger/reference_databases/bac120_taxonomy_r95.tsv.gz
+  --blastdb             Path to the blast database used for classifying reads.
+                            Default: /mnt/b/seqdata/sanger/reference_databases/bac120_ssu_reps_r95
 
 Usage example:
     nextflow run main.nf --sample_dir '/path/to/data'
