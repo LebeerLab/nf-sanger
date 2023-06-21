@@ -18,8 +18,12 @@ def helpMessage() {
      Author: LAMB (UAntwerp)
     =========================================
     Required arguments:
-      --sample_dir             Path to the samplesheet containing the reads to be assembled. Default: ${params.sampledir}
+      --sample_dir          Path to the samplesheet containing the reads to be assembled. Default: ${params.sample_dir}
       --outdir              Column with the name of the sample. Default: ${params.outdir}
+      --taxonomy            Path to the gtdb taxonomy file. 
+                                Default: ${params.taxonomy}
+      --blastdb             Path to the blast database used for classifying reads. 
+                                Default: ${params.blastdb}
 
     Usage example:
         nextflow run main.nf --sample_dir '/path/to/data'
