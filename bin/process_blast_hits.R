@@ -41,4 +41,4 @@ sanger_sequences <-
 # write identifications
 sanger_sequences %>%
 mutate(query = sample_id) %>%
-write.table(fout, quote = FALSE, row.names = FALSE)
+write.table(fout, quote = FALSE, row.names = FALSE, sep="\t")

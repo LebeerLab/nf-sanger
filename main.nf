@@ -48,7 +48,7 @@ process BASECALL {
     conda 'bioconda::tracy'
     tag "${pair_id}" 
 
-    publishDir "${params.outdir}/tracy", mode: 'copy'
+    publishDir "${params.outdir}/tracy", mode: 'copy', pattern: "*.log"
 
     input:
       tuple val(pair_id), path(reads)
@@ -62,14 +62,18 @@ process BASECALL {
       reads !instanceof Path
 
     script:
-    def rev_read = "${reads[0].baseName}"
-    def fw_read = "${reads[1].baseName}"
+    def is_zipped = reads[0].getName().endsWith('.gz')
+    def rev_read = is_zipped ? "${reads[0].baseName}" : reads[0]
+    def fw_read = is_zipped ? "${reads[1].baseName}" : reads[1]
     //tracy basecall -f fastq -o out.fastq ${reads} 2>&1 >> read.log
     """
+    if [[ $is_zipped == true ]]
+    then
     gunzip -f ${reads[0]}
     gunzip -f ${reads[1]}
-    tracy basecall -f fastq -o rev_out.fastq $rev_read 2>&1 >> rev_read.log
-    tracy basecall -f fastq -o fw_out.fastq $fw_read 2>&1 >> fw_read.log
+    fi
+    tracy basecall -f fastq -o rev_out.fastq $rev_read 2>&1 >> rev_read_"${pair_id}".log
+    tracy basecall -f fastq -o fw_out.fastq $fw_read 2>&1 >> fw_read_"${pair_id}".log
     """
 }
 
@@ -174,17 +178,21 @@ workflow {
 
   paramsUsed()
 
-  ab_files = Channel.fromFilePairs("${params.sample_dir}/**/*_{*F,*R}_*.ab1.gz", checkIfExists: true)
+  abf = Channel.fromFilePairs("${params.sample_dir}/**/*_{*F,*R}_*.ab1")
     .map{ group_key, files -> tuple(
         "${files[0].parent.baseName}_$group_key", files
     )}
     //.take(30)
+  ab_files_gz = Channel.fromFilePairs("${params.sample_dir}/**/*_{*F,*R}_*.ab1.gz")
+    .map{ group_key, files -> tuple(
+        "${files[0].parent.baseName}_$group_key", files
+    )}
 
-  BASECALL(
-    ab_files
-  ).set{ basecalled_files }
+  ab_files = abf.concat(ab_files_gz)
 
-  TRIM_AND_MERGE(basecalled_files.fastq)
+  BASECALL(ab_files)
+
+  TRIM_AND_MERGE(BASECALL.out.fastq)
   TRIM_AND_MERGE
      .out.merge_log
      .branch{
@@ -194,7 +202,7 @@ workflow {
 
 // RETRY MERGE AFTER REVERSING READS
   if (merging_process.failed) {
-    basecalled_files.fastq
+    BASECALL.out.fastq
      .join(merging_process.failed)
      .map{ [ it[0] , it[1] ]}
      .set{ reads_failed_to_merge }
