@@ -105,6 +105,7 @@ process FASTQ_TO_FASTA {
   tag "${pair_id}"
 
   //publishDir "${params.outdir}/fasta", mode: 'copy'
+  conda 'bioconda::emboss'
 
   input:
     tuple val(pair_id), path(fastq)
@@ -123,6 +124,8 @@ process FASTQ_TO_FASTA {
 process ALIGN_READS {
   tag "${pair_id}" 
   publishDir "${params.outdir}/mafft", mode: 'copy'
+
+  conda "${projectDir}/conf/align.yaml"
 
   input:
     tuple val(pair_id), path(reads)
@@ -191,7 +194,6 @@ workflow {
   ab_files = abf.concat(ab_files_gz)
 
   BASECALL(ab_files)
-
   TRIM_AND_MERGE(BASECALL.out.fastq)
   TRIM_AND_MERGE
      .out.merge_log

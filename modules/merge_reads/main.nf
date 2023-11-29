@@ -7,6 +7,8 @@ process MERGE_READS {
 
     tag "${pair_id}" 
 
+    conda 'bioconda::ngmerge'
+
     publishDir "${params.OUTPUT}/NGmerge", mode: 'copy'
 
     input:

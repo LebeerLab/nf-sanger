@@ -1,0 +1,8 @@
+name: sanger-aligner
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - mafft=7.520
+  - emboss=6.6.0
