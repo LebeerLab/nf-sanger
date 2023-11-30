@@ -104,7 +104,8 @@ process REVERSE_READS {
 process FASTQ_TO_FASTA {
   tag "${pair_id}"
 
-  publishDir "${params.outdir}/fasta", mode: 'copy'
+  //publishDir "${params.outdir}/fasta", mode: 'copy'
+  conda 'bioconda::emboss'
 
   input:
     tuple val(pair_id), path(fastq)
@@ -123,6 +124,8 @@ process FASTQ_TO_FASTA {
 process ALIGN_READS {
   tag "${pair_id}" 
   publishDir "${params.outdir}/mafft", mode: 'copy'
+
+  conda "${projectDir}/conf/align.yaml"
 
   input:
     tuple val(pair_id), path(reads)
@@ -143,6 +146,8 @@ process BLAST_16S {
   tag "${pair_id}" 
   publishDir "${params.outdir}/16S_blast", mode: 'copy', pattern:'*_hits.txt'
   publishDir "${params.outdir}/16S_blast/sequences", mode: 'copy', pattern:'*.fasta'
+
+  conda 'bioconda::blast'
 
   input:
     tuple val(pair_id), path(fasta)
@@ -193,7 +198,6 @@ workflow {
   ab_files = abf.concat(ab_files_gz)
 
   BASECALL(ab_files)
-
   TRIM_AND_MERGE(BASECALL.out.fastq)
   TRIM_AND_MERGE
      .out.merge_log
