@@ -104,7 +104,7 @@ process REVERSE_READS {
 process FASTQ_TO_FASTA {
   tag "${pair_id}"
 
-  //publishDir "${params.outdir}/fasta", mode: 'copy'
+  publishDir "${params.outdir}/fasta", mode: 'copy'
 
   input:
     tuple val(pair_id), path(fastq)
@@ -141,13 +141,15 @@ process ALIGN_READS {
 
 process BLAST_16S {
   tag "${pair_id}" 
-  publishDir "${params.outdir}/16S_blast", mode: 'copy'
+  publishDir "${params.outdir}/16S_blast", mode: 'copy', pattern:'*_hits.txt'
+  publishDir "${params.outdir}/16S_blast/sequences", mode: 'copy', pattern:'*.fasta'
 
   input:
     tuple val(pair_id), path(fasta)
 
   output:
     tuple val(pair_id), path("*_hits.txt"), emit: hits
+    tuple val(pair_id), path(fasta)
 
   script:
   """
