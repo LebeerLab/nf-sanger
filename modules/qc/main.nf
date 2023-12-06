@@ -62,7 +62,7 @@ process TRIM_ENDS {
 process MULTIQC {
     publishDir "${params.OUTPUT}", mode: 'copy'
 
-    conda 'bioconda::multiqc'
+    conda 'bioconda::multiqc=1.7'
 
     input:
     path('fastp/*')
