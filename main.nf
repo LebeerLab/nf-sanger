@@ -4,6 +4,7 @@ params.sample_dir = "$baseDir/data/"
 params.outdir = "results"
 params.blastdb = "../reference_databases/bac120_ssu_reps_r95"
 params.taxonomy = "../reference_database/bac120_taxonomy_r95.tsv.gz"
+params.type = "16S"
 params.help = false
 
 //===== INCLUDE MODULES ==========================================
@@ -142,10 +143,10 @@ process ALIGN_READS {
   """  
 }
 
-process BLAST_16S {
+process BLAST {
   tag "${pair_id}" 
-  publishDir "${params.outdir}/16S_blast", mode: 'copy', pattern:'*_hits.txt'
-  publishDir "${params.outdir}/16S_blast/sequences", mode: 'copy', pattern:'*.fasta'
+  publishDir "${params.outdir}/${params.type}_blast", mode: 'copy', pattern:'*_hits.txt'
+  publishDir "${params.outdir}/${params.type}/sequences", mode: 'copy', pattern:'*.fasta'
 
   conda 'bioconda::blast'
 
@@ -263,12 +264,12 @@ workflow {
      .filter{ !it[1][0].isEmpty() }
      .filter{ !it[1][1].isEmpty() }
   )
-  BLAST_16S(
+  BLAST(
    FASTQ_TO_FASTA.out.fasta
   )
 
   PROCESS_BLAST_HITS(
-    BLAST_16S.out.hits
+    BLAST.out.hits
   )
 
   PROCESS_BLAST_HITS
