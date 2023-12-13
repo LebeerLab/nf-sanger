@@ -7,7 +7,7 @@ process MERGE_READS {
 
     tag "${pair_id}" 
 
-    //conda 'bioconda::ngmerge'
+    //conda 'bioconda::ngmerge' # need to modify sourcecode to get longer sequences (>1024) merged
 
     publishDir "${params.OUTPUT}/NGmerge", mode: 'copy'
 
