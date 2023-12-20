@@ -31,7 +31,8 @@ def paramsUsed() {
     N F - W G S - I L L U M I N A
     =========================================
     sample_dir:      ${params.sample_dir}
-    outdir:       ${params.outdir}
+    outdir:          ${params.outdir}
+    blastdb:         ${params.blastdb}
     """.stripIndent()
 }
 
