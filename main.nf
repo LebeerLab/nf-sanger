@@ -33,7 +33,7 @@ def helpMessage() {
 
 def paramsUsed() {
     log.info"""
-    N F - W G S - I L L U M I N A
+    N F - S A N G E R
     =========================================
     sample_dir:      ${params.sample_dir}
     outdir:       ${params.outdir}
