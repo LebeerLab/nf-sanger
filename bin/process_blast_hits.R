@@ -64,15 +64,24 @@ if (format_bool$saccver[1]) {
     fin_hits %>%
     read_tsv(col_names = blast_columns, col_types = cols()) %>%
     select(query = qaccver, ref = saccver, pident, length, bitscore) %>%
+    mutate(ref = str_extract(ref, "[^~]+")) %>%
     group_by(query) %>%
     arrange(desc(bitscore)) %>%
-    slice(1) %>%
-    ungroup() %>%
+    slice(1:5) %>%
+    ungroup() %>% 
     left_join(refgenomes, by = "ref")
 }
+
+# get most frequent species in 5 best matches
+spcs <- sanger_sequences %>%
+  count(species) %>%
+  slice(which.max(n)) %>%
+  pull(species)
 
 # write identifications
 sanger_sequences %>%
 mutate(query = sample_id) %>%
+filter(species == spcs) %>%
+slice(1) %>% 
 arrange(query) %>% 
 write.table(fout, quote = FALSE, row.names = FALSE, sep="\t")

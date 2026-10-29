@@ -1,9 +1,9 @@
 // PARAMETERS
-params.OUTPUT = "results"
+params.outdir = "results"
 
 process FASTP {
     tag "${pair_id}"    
-    publishDir "${params.OUTPUT}/fastp", mode: 'copy'
+    publishDir "${params.outdir}/fastp", mode: 'copy'
     
     conda 'bioconda::fastp'
 
@@ -27,6 +27,7 @@ process FASTP {
     --disable_quality_filtering \
     --cut_tail \
     --cut_mean_quality 20 \
+    -6 \
     $args
     """
 }
@@ -60,7 +61,7 @@ process TRIM_ENDS {
 }
 
 process MULTIQC {
-    publishDir "${params.OUTPUT}", mode: 'copy'
+    publishDir "${params.outdir}", mode: 'copy'
 
     conda 'bioconda::multiqc=1.13'
 

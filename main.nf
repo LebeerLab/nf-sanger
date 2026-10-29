@@ -1,16 +1,15 @@
 #!/usr/bin/env nextflow
- 
 params.sample_dir = "$baseDir/data/"
 params.outdir = "results"
-params.blastdb = "../reference_databases/bac120_ssu_reps_r95"
-params.taxonomy = "../reference_database/bac120_taxonomy_r95.tsv.gz"
+params.blastdb = "../reference_databases/bac120_ssu_all_r220"
+params.taxonomy = "../reference_database/bac120_taxonomy_r220.tsv.gz"
 params.type = "16S"
 params.help = false
 
 //===== INCLUDE MODULES ==========================================
-include { TRIM_ENDS } from './modules/qc' addParams(OUTPUT: "${params.outdir}")
+include { TRIM_ENDS } from './modules/qc'
 include { TRIM_AND_MERGE; TRIM_AND_MERGE as TRIM_AND_MERGE_REVERSED_READS} \
-  from './modules/merge_reads' addParams(OUTPUT: "${params.outdir}")
+  from './modules/merge_reads'
 // ================================================================
 
 def helpMessage() {
@@ -40,11 +39,6 @@ def paramsUsed() {
     """.stripIndent()
 }
 
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
 process BASECALL {
     conda 'bioconda::tracy'
     tag "${pair_id}" 
@@ -60,7 +54,7 @@ process BASECALL {
 
 
     when:
-      reads !instanceof Path
+      reads !instanceof java.nio.file.Path
 
     script:
     def is_zipped = reads[0].getName().endsWith('.gz')
@@ -88,16 +82,17 @@ process REVERSE_READS {
       tuple val(pair_id), path("*_reversed.fastq"), emit: reversed_reads
   
     script:
-    def single = reads instanceof Path
+    def single = reads instanceof java.nio.file.Path
     def out_file_fw = single ? "${reads.baseName}_reversed.fastq" : "${reads[1].baseName}_reversed.fastq"
     def out_file_rv = single ? null : "${reads[0].baseName}_reversed.fastq"
     """
+    
     if [ $single == true ]; then
-    ./reverse_fastq.sh $reads $out_file_fw
+    seqtk seq -r $reads > $out_file_fw
 
     else
-    reverse_fastq.sh ${reads[1]} $out_file_fw
-    reverse_fastq.sh ${reads[0]} $out_file_rv
+    seqtk seq -r ${reads[1]} > $out_file_fw
+    seqtk seq -r ${reads[0]} > $out_file_rv
     fi
     """
 }
@@ -126,7 +121,7 @@ process ALIGN_READS {
   tag "${pair_id}" 
   publishDir "${params.outdir}/mafft", mode: 'copy'
 
-  conda "${projectDir}/conf/align.yaml"
+  //conda "${projectDir}/conf/align.yaml"
 
   input:
     tuple val(pair_id), path(reads)
@@ -162,6 +157,7 @@ process BLAST {
   blastn -query $fasta \
   -db $params.blastdb \
   -outfmt 6 \
+  -task megablast \
   -num_threads $task.cpus > ${pair_id}_hits.txt
   """
 }
@@ -184,6 +180,11 @@ process PROCESS_BLAST_HITS {
 
 workflow {
 
+  if (params.help){
+    helpMessage()
+    exit 0
+  }
+
   paramsUsed()
 
   abf = Channel.fromFilePairs("${params.sample_dir}/**/*_{*F,*R}_*.ab1")
@@ -195,7 +196,7 @@ workflow {
     .map{ group_key, files -> tuple(
         "${files[0].parent.baseName}_$group_key", files
     )}
-
+ 
   ab_files = abf.concat(ab_files_gz)
 
   BASECALL(ab_files)
@@ -247,8 +248,7 @@ workflow {
   .set{ merges_reverse }
   
   // Use forward reads of the samples that raise an error
-  TRIM_AND_MERGE.out.failed_to_merge.
-   filter{ !it[1].isEmpty() }
+  TRIM_AND_MERGE.out.failed_to_merge.filter{ !it[1].isEmpty() }
    .set{merge_failures}
 
   merges = merges_forward.concat(merges_reverse)
@@ -270,6 +270,7 @@ workflow {
 
   PROCESS_BLAST_HITS(
     BLAST.out.hits
+      .filter {  !it[1].isEmpty() }
   )
 
   PROCESS_BLAST_HITS

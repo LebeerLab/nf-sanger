@@ -1,6 +1,6 @@
-include { FASTP; MULTIQC } from '../../modules/qc' addParams(OUTPUT: "${params.outdir}")
+include { FASTP; MULTIQC } from '../../modules/qc'
 
-params.OUTPUT = "results"
+params.outdir = "results"
 
 process MERGE_READS {
     errorStrategy 'ignore'
@@ -9,7 +9,7 @@ process MERGE_READS {
 
     //conda 'bioconda::ngmerge' # need to modify sourcecode to get longer sequences (>1024) merged
 
-    publishDir "${params.OUTPUT}/NGmerge", mode: 'copy'
+    publishDir "${params.outdir}/NGmerge", mode: 'copy'
 
     input:
       tuple val(pair_id), path(reads)
@@ -19,7 +19,7 @@ process MERGE_READS {
       tuple val(pair_id), path("*.log"), emit: log
 
     when:
-      reads !instanceof Path
+      reads !instanceof java.nio.file.Path
     
     script:
     """
@@ -36,7 +36,7 @@ workflow TRIM_AND_MERGE {
   main:
     FASTP(reads_ch)
     FASTP.out.trimmedReads
-      .ifEmpty{ error "No reads to filter" }
+//      .ifEmpty{ error "No reads to filter" }
       .set { trimmedReads }
     FASTP.out.fastp
       .collect()

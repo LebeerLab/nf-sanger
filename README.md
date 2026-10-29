@@ -29,3 +29,6 @@ These can be adapted to the needs of the pipeline run via the command line (see 
 The pipeline will try to merge forward and reverse reads and do classification on the resulting merged reads. 
 Failing that a first time, it will try a merge of the reverse complements of the reads.
 Should this merge not succeed, the longest read of the pair will be kept for classfication, while the other is discarded.
+
+From the resulting blast output, the most frequent occuring species in the top 5 bitscore hits gets assigned as the eventual result.
+In case of discrepancies, the user should consult the full output table.
